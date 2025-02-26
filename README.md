@@ -178,128 +178,538 @@ TTP(Time To Play)는 웹소켓 기반의 실시간 멀티플레이 게임 플랫
 
 ## 🏗 시스템 아키텍처
 
-### 초기 아키텍처 (Current)
-기본적인 기능 구현과 서비스 안정화에 초점을 맞춘 아키텍처입니다.
-
+### 전체 시스템 구조
 ```mermaid
-graph TD
-    Users[Users] <--> Internet[Internet]
-    Internet <--> Route53[Route53]
-    Route53 <--> Nginx[Nginx]
-    
-    subgraph AWS Cloud
-        subgraph EC2 Instance
-            Nginx --> NodeExpress[Node Express]
-            Nginx --> Spring[Spring]
-            Spring <--> Redis[Redis]
-            NodeExpress --> Spring
-            Spring --> RDS[(RDS)]
+graph TB
+    subgraph Client[Mobile Client Layer]
+        direction TB
+        UI[React Native UI]
+        State[Redux State Management]
+        APIClient[API Client]
+        Cache[Local Cache]
+        ImageHandler[Image Handler]
+    end
+
+    subgraph Gateway[API Gateway Layer]
+        direction TB
+        LoadBalancer[Load Balancer]
+        Auth[Authentication]
+        RateLimit[Rate Limiter]
+        Cache[API Cache]
+        Logger[Request Logger]
+    end
+
+    subgraph Application[Application Layer]
+        subgraph Controllers[API Controllers]
+            direction TB
+            AuthController[Authentication Controller]
+            AnalysisController[Analysis Controller]
+            CosmeticController[Cosmetic Controller]
+            IngredientController[Ingredient Controller]
+            MemberController[Member Controller]
+            QnAController[QnA Controller]
+            RecommendController[Recommend Controller]
+            EvaluationController[Evaluation Controller]
+            ComparisonController[Comparison Controller]
+        end
+
+        subgraph Services[Service Layer]
+            direction TB
+            AuthService[Authentication Service]
+            MemberService[Member Service]
+            AnalysisService[Analysis Service]
+            ComparisonService[Comparison Service]
+            CosmeticService[Cosmetic Service]
+            IngredientService[Ingredient Service]
+            QnaService[QnA Service]
+            RecommendService[Recommend Service]
+            EvaluationService[Evaluation Service]
+            BulkService[Bulk Processing Service]
+            NotificationService[Notification Service]
+        end
+
+        subgraph Domain[Domain Layer]
+            direction TB
+            Entities[Domain Entities]
+            ValueObjects[Value Objects]
+            Repositories[Repositories]
+            DomainServices[Domain Services]
         end
     end
-```
 
-### 향후 아키텍처 (To-Be)
-서비스 확장성과 가용성을 고려한 고도화된 아키텍처입니다.
+    subgraph AI[AI/ML Layer]
+        direction TB
+        subgraph TextAnalysis[Text Analysis]
+            OpenAIService[OpenAI Service]
+            NLPService[NLP Service]
+            TextClassification[Text Classification]
+        end
 
-```mermaid
-graph TD
-    Users[Users] <--> Internet[Internet]
-    Internet <--> Route54[Amazon Route 54]
-    Route54 <--> IGW[Internet Gateway]
-    
-    subgraph AWS Cloud
-        subgraph VPC[VPC]
-            IGW <--> Nginx[NGINX]
-            
-            subgraph AZ1[Availability Zone 1]
-                subgraph Public1[Public Subnet]
-                    NAT1[NAT Instance]
-                end
-                
-                subgraph Private1[Private Subnet]
-                    Nginx --> EC1[EC2]
-                end
-            end
-            
-            subgraph AZ2[Availability Zone 2]
-                subgraph Public2[Public Subnet]
-                    NAT2[NAT Instance]
-                end
-                
-                subgraph Private2[Private Subnet]
-                    Nginx --> EC2[EC2]
-                end
-            end
-            
-            subgraph Database Tier
-                EC1 & EC2 --> RDSMaster[(RDS Master)]
-                RDSMaster --> RDSStandby[(RDS Standby)]
-                EC1 & EC2 --> ElastiCache[ElastiCache]
-            end
+        subgraph ImageAnalysis[Image Analysis]
+            OCRService[OCR Service]
+            ImageRecognition[Image Recognition]
+            FeatureExtraction[Feature Extraction]
+        end
+
+        subgraph RecommendationEngine[Recommendation Engine]
+            UserProfiling[User Profiling]
+            CollaborativeFiltering[Collaborative Filtering]
+            ContentBasedFiltering[Content Based Filtering]
+            HybridRecommendation[Hybrid Recommendation]
+        end
+
+        subgraph ModelManagement[Model Management]
+            ModelTraining[Model Training]
+            ModelEvaluation[Model Evaluation]
+            ModelDeployment[Model Deployment]
+            ModelMonitoring[Model Monitoring]
         end
     end
+
+    subgraph Infrastructure[Infrastructure Layer]
+        subgraph Storage[Data Storage]
+            direction TB
+            MySQL[(MySQL Database)]
+            Redis[(Redis Cache)]
+            S3[S3 Object Storage]
+            ElasticSearch[(ElasticSearch)]
+        end
+
+        subgraph MessageQueue[Message Queue]
+            Kafka[Apache Kafka]
+            KafkaTopics[Kafka Topics]
+            KafkaConsumers[Kafka Consumers]
+        end
+
+        subgraph Monitoring[System Monitoring]
+            Prometheus[Prometheus]
+            Grafana[Grafana Dashboard]
+            AlertManager[Alert Manager]
+        end
+
+        subgraph Security[Security]
+            WAF[Web Application Firewall]
+            KeyVault[Key Vault]
+            IAM[Identity Management]
+        end
+    end
+
+    Client --> Gateway
+    Gateway --> Application
+    Application --> AI
+    Application --> Infrastructure
+    AI --> Infrastructure
+
+    classDef client fill:#e1bee7,stroke:#333,stroke-width:2px
+    classDef gateway fill:#bbdefb,stroke:#333,stroke-width:2px
+    classDef application fill:#c8e6c9,stroke:#333,stroke-width:2px
+    classDef ai fill:#ffe0b2,stroke:#333,stroke-width:2px
+    classDef infrastructure fill:#ffcdd2,stroke:#333,stroke-width:2px
+
+    class Client client
+    class Gateway gateway
+    class Application application
+    class AI ai
+    class Infrastructure infrastructure
 ```
 
-### 주요 개선 사항
-- **가용성 향상**: 다중 가용 영역(AZ) 구성으로 서비스 안정성 강화
-- **보안 강화**: VPC 내 public/private 서브넷 분리로 보안 계층화
-- **확장성 개선**: 
-  - NAT Instance를 통한 효율적인 네트워크 트래픽 관리
-  - RDS 마스터-스탠바이 구성으로 데이터베이스 가용성 확보
-  - ElastiCache 도입으로 성능 최적화
-- **운영 효율성**: 
-  - 체계적인 네트워크 구성으로 관리 효율성 증대
-  - 장애 발생 시 신속한 복구 가능
+### 컴포넌트 상세 설명
 
-## 🚀 성능 최적화
+#### 1. Mobile Client Layer
+- **React Native UI**
+  - 사용자 인터페이스 컴포넌트
+  - 반응형 디자인
+  - 네이티브 기능 통합
+- **Redux State Management**
+  - 전역 상태 관리
+  - 비동기 작업 처리
+  - 캐시 데이터 관리
+- **API Client**
+  - RESTful API 통신
+  - 요청/응답 인터셉터
+  - 에러 핸들링
+- **Local Cache**
+  - 오프라인 데이터 저장
+  - 이미지 캐싱
+  - 성능 최적화
+- **Image Handler**
+  - 이미지 압축
+  - 포맷 변환
+  - 업로드 관리
 
-### 비동기 처리
-- AsyncConfig를 통한 커스텀 스레드 풀 구성
-- @Async 어노테이션으로 비동기 처리 구현
-- WebSocket을 통한 실시간 게임 상태 동기화
+#### 2. API Gateway Layer
+- **Load Balancer**
+  - 트래픽 분산
+  - 헬스 체크
+  - 자동 스케일링
+- **Authentication**
+  - JWT 토큰 검증
+  - 권한 확인
+  - 세션 관리
+- **Rate Limiter**
+  - API 사용량 제한
+  - DDoS 방어
+  - 공정한 리소스 분배
+- **API Cache**
+  - 응답 캐싱
+  - 캐시 무효화
+  - 성능 최적화
+- **Request Logger**
+  - 요청/응답 로깅
+  - 에러 트래킹
+  - 감사 로깅
 
-### 동시성 관리
-- ConcurrentHashMap으로 게임 상태 관리
-- ReentrantLock으로 동시성 제어
-- 분산 락으로 다중 서버 환경 동기화
+#### 3. Application Layer
+##### API Controllers
+- **Authentication Controller**
+  - 로그인/로그아웃
+  - 회원가입
+  - 비밀번호 재설정
+- **Analysis Controller**
+  - 성분 분석 요청
+  - 분석 결과 조회
+  - 이미지 업로드
+- **Cosmetic Controller**
+  - 화장품 CRUD
+  - 검색 및 필터링
+  - 상세 정보 조회
+- **Ingredient Controller**
+  - 성분 정보 관리
+  - 성분 검색
+  - 안전도 평가
+- **Member Controller**
+  - 프로필 관리
+  - 선호도 설정
+  - 활동 내역
+- **QnA Controller**
+  - 문의 등록/답변
+  - FAQ 관리
+  - 상담 내역
+- **Recommend Controller**
+  - 맞춤 추천
+  - 인기 제품
+  - 새로운 발견
+- **Evaluation Controller**
+  - 제품 평가
+  - 리뷰 관리
+  - 평점 시스템
+- **Comparison Controller**
+  - 제품 비교
+  - 가격 비교
+  - 성분 비교
 
-### 캐시 최적화
-- Redis를 활용한 세션 관리
-- Caffeine 캐시로 로컬 캐싱 구현
-- 계층형 캐시 아키텍처 적용
+##### Service Layer
+- **Authentication Service**
+  - 인증 로직
+  - 토큰 관리
+  - 보안 정책
+- **Member Service**
+  - 회원 관리
+  - 프로필 처리
+  - 권한 관리
+- **Analysis Service**
+  - 성분 분석
+  - 결과 가공
+  - 데이터 통계
+- **Comparison Service**
+  - 제품 비교 로직
+  - 유사도 계산
+  - 차이점 분석
+- **Cosmetic Service**
+  - 제품 데이터 관리
+  - 카테고리 관리
+  - 브랜드 관리
+- **Ingredient Service**
+  - 성분 데이터 관리
+  - 안전성 평가
+  - 효과 분석
+- **QnA Service**
+  - 문의 처리
+  - 답변 관리
+  - 상담 통계
+- **Recommend Service**
+  - 추천 알고리즘
+  - 개인화 처리
+  - 트렌드 분석
+- **Evaluation Service**
+  - 평가 처리
+  - 리뷰 관리
+  - 신뢰도 계산
+- **Bulk Service**
+  - 대량 데이터 처리
+  - 배치 작업
+  - 데이터 동기화
+- **Notification Service**
+  - 알림 발송
+  - 구독 관리
+  - 이벤트 처리
 
-## 📈 성능 지표
+#### 4. AI/ML Layer
+##### Text Analysis
+- **OpenAI Service**
+  - GPT 모델 통합
+  - 프롬프트 관리
+  - 응답 처리
+- **NLP Service**
+  - 텍스트 전처리
+  - 언어 분석
+  - 감성 분석
+- **Text Classification**
+  - 카테고리 분류
+  - 키워드 추출
+  - 의도 파악
 
-- 서버 응답 시간: 평균 50ms 이하
-- 동시 접속자: 최대 3000명 수용
-- 메모리 사용 효율: 2배 향상
-- CPU 사용률: 29% 감소
+##### Image Analysis
+- **OCR Service**
+  - 텍스트 추출
+  - 이미지 전처리
+  - 결과 검증
+- **Image Recognition**
+  - 제품 인식
+  - 라벨 인식
+  - 특징 추출
+- **Feature Extraction**
+  - 이미지 특징 추출
+  - 패턴 인식
+  - 유사도 계산
 
-## 🎯 개발 현황 및 계획
+##### Recommendation Engine
+- **User Profiling**
+  - 사용자 행동 분석
+  - 선호도 학습
+  - 프로필 업데이트
+- **Collaborative Filtering**
+  - 사용자 기반 추천
+  - 아이템 기반 추천
+  - 행렬 분해
+- **Content Based Filtering**
+  - 콘텐츠 분석
+  - 유사도 계산
+  - 특징 매칭
+- **Hybrid Recommendation**
+  - 앙상블 모델
+  - 가중치 최적화
+  - 성능 평가
 
-### 현재 진행 상황 (45% 구현)
-- [x] 기본 게임 로직 구현
-- [x] 실시간 통신 기반 마련
-- [x] 기본 인프라 구축
-- [x] 동시성 관리 시스템 구축
+##### Model Management
+- **Model Training**
+  - 모델 학습
+  - 하이퍼파라미터 튜닝
+  - 검증
+- **Model Evaluation**
+  - 성능 측정
+  - A/B 테스트
+  - 품질 관리
+- **Model Deployment**
+  - 모델 배포
+  - 버전 관리
+  - 롤백 처리
+- **Model Monitoring**
+  - 성능 모니터링
+  - 드리프트 감지
+  - 재학습 트리거
 
-### 단기 목표 (2주)
-- [ ] 핵심 게임 로직 비동기 전환
-- [ ] 락 메커니즘 최적화
-- [ ] 캐시 시스템 고도화
+#### 5. Infrastructure Layer
+##### Data Storage
+- **MySQL Database**
+  - 트랜잭션 관리
+  - 백업/복구
+  - 인덱싱
+- **Redis Cache**
+  - 세션 저장
+  - 실시간 데이터
+  - 캐시 관리
+- **S3 Object Storage**
+  - 이미지 저장
+  - 파일 관리
+  - CDN 연동
+- **ElasticSearch**
+  - 전문 검색
+  - 로그 분석
+  - 데이터 집계
 
-### 중기 목표 (1개월)
-- [ ] WebFlux 도입
-- [ ] 트랜잭션 관리 개선
-- [ ] 모니터링 시스템 구축
+##### Message Queue
+- **Apache Kafka**
+  - 이벤트 스트리밍
+  - 메시지 브로커
+  - 데이터 파이프라인
+- **Kafka Topics**
+  - 토픽 관리
+  - 파티셔닝
+  - 복제
+- **Kafka Consumers**
+  - 컨슈머 그룹
+  - 오프셋 관리
+  - 장애 복구
 
-## 🤝 기여 방법
+##### System Monitoring
+- **Prometheus**
+  - 메트릭 수집
+  - 알림 규칙
+  - 시계열 DB
+- **Grafana Dashboard**
+  - 시각화
+  - 대시보드
+  - 리포팅
+- **Alert Manager**
+  - 알림 관리
+  - 에스컬레이션
+  - 알림 그룹핑
 
-1. 이 저장소를 포크합니다
-2. 새로운 브랜치를 생성합니다
+##### Security
+- **Web Application Firewall**
+  - 웹 공격 방어
+  - 규칙 관리
+  - 트래픽 필터링
+- **Key Vault**
+  - 비밀 관리
+  - 인증서 관리
+  - 암호화 키 관리
+- **Identity Management**
+  - 사용자 인증
+  - 권한 관리
+  - SSO 통합
+
+### 주요 데이터 흐름
+
+#### 1. 화장품 분석 프로세스
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as API Gateway
+    participant AS as Analysis Service
+    participant OCR as OCR Service
+    participant AI as AI Service
+    participant DB as Database
+    participant MQ as Message Queue
+
+    C->>API: 이미지 업로드 요청
+    API->>AS: 분석 작업 시작
+    AS->>OCR: 이미지 텍스트 추출
+    OCR-->>AS: 추출된 텍스트
+    AS->>AI: 성분 분석 요청
+    AI-->>AS: 분석 결과
+    AS->>DB: 결과 저장
+    AS->>MQ: 분석 완료 이벤트
+    MQ-->>C: 실시간 알림
+    AS-->>API: 분석 결과 반환
+    API-->>C: 응답
+```
+
+#### 2. 추천 시스템 프로세스
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as API Gateway
+    participant RS as Recommend Service
+    participant UP as User Profiling
+    participant CF as Collaborative Filtering
+    participant CB as Content Based Filtering
+    participant DB as Database
+
+    C->>API: 추천 요청
+    API->>RS: 추천 프로세스 시작
+    RS->>UP: 사용자 프로필 조회
+    UP-->>RS: 프로필 데이터
+    par Parallel Processing
+        RS->>CF: 협업 필터링
+        RS->>CB: 콘텐츠 기반 필터링
+    end
+    CF-->>RS: 추천 결과 1
+    CB-->>RS: 추천 결과 2
+    RS->>RS: 결과 통합
+    RS->>DB: 추천 이력 저장
+    RS-->>API: 최종 추천 목록
+    API-->>C: 응답
+```
+
+#### 3. 실시간 평가 처리 프로세스
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as API Gateway
+    participant ES as Evaluation Service
+    participant AS as Analysis Service
+    participant AI as AI Service
+    participant MQ as Message Queue
+    participant DB as Database
+
+    C->>API: 평가 제출
+    API->>ES: 평가 처리 시작
+    ES->>DB: 평가 저장
+    ES->>MQ: 평가 이벤트 발행
+    par Parallel Processing
+        MQ->>AS: 분석 데이터 업데이트
+        MQ->>AI: 추천 모델 업데이트
+    end
+    AS-->>DB: 업데이트된 분석
+    AI-->>DB: 모델 가중치 조정
+    ES-->>API: 처리 완료
+    API-->>C: 응답
+```
+
+### 시스템 확장성 및 고가용성
+
+#### 1. 수평적 확장
+- 마이크로서비스 아키텍처
+- 컨테이너 오케스트레이션
+- 로드 밸런싱
+
+#### 2. 데이터 파티셔닝
+- 샤딩 전략
+- 리플리케이션
+- 백업 정책
+
+#### 3. 캐싱 전략
+- 다층 캐싱
+- 캐시 동기화
+- 무효화 정책
+
+#### 4. 장애 대응
+- 서킷 브레이커
+- 폴백 메커니즘
+- 재시도 정책
+
+### 보안 아키텍처
+
+#### 1. 인증 및 인가
+- JWT 기반 인증
+- RBAC 권한 관리
+- OAuth2.0 통합
+
+#### 2. 데이터 보안
+- 암호화 (저장/전송)
+- 개인정보 보호
+- 감사 로깅
+
+#### 3. 네트워크 보안
+- HTTPS/TLS
+- WAF 구성
+- DDoS 방어
+
+## 🚀 설치 및 실행
+
+```bash
+# 저장소 클론
+git clone https://github.com/your-username/IntellyCosm.git
+
+# 디렉토리 이동
+cd IntellyCosm
+
+# 의존성 설치
+./gradlew build
+
+# 애플리케이션 실행
+./gradlew bootRun
+```
+
+## 🤝 기여하기
+
+1. 프로젝트 포크
+2. 새 브랜치를 생성합니다
 3. 변경사항을 커밋합니다
 4. 브랜치에 푸시합니다
-5. Pull Request를 생성합니다
+5. Pull Request 생성
 
 ## 📝 라이센스
 
@@ -525,3 +935,5 @@ cd IntellyCosm
 ## 📝 라이센스
 
 이 프로젝트는 MIT 라이선스를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+
+```
