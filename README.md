@@ -303,7 +303,7 @@ graph TD
 
 ## 📝 라이센스
 
-이 프로젝트는 MIT 라이센스를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+이 프로젝트는 MIT 라이선스를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
 ---
 
@@ -324,3 +324,204 @@ graph TD
 - 컴퓨터공학과 학사
 
 </div>
+
+# IntellyCosm - AI 기반 화장품 성분 분석 및 추천 서비스
+
+## 📝 프로젝트 소개
+
+IntellyCosm은 AI 기술을 활용하여 화장품 성분을 분석하고, 사용자의 피부 타입에 맞는 최적의 화장품을 추천하는 서비스입니다.
+
+## 🌟 주요 기능
+
+### 👤 사용자 기능
+
+#### 1. 화장품 성분 분석
+- AI 기반 성분 분석 및 추천도 제공
+- 피부타입별 긍정/부정/주의 성분 수치 분석
+- 성분 안전등급 비율 그래프 제공
+- 성분별 상세 정보 (이름, 목적, 기능)
+- 즐겨찾기 기능
+
+#### 2. 효과 분석
+- 전체 효과 텍스트 요약
+- 효과별 성분 수 그래프
+- 효과별 성분 구성 정보
+- 즐겨찾기 기능
+
+#### 3. 피부 타입별 분석
+- 피부 타입별 긍정/부정 성분 수치 그래프
+- 상세 성분 정보 제공
+
+#### 4. AI 화장품 추천
+- 사용자 피부 타입 기반 추천
+- 성분 분석 기반 맞춤형 추천
+
+#### 5. 가격 비교
+- 다양한 판매처 가격 비교
+- 판매처 바로가기 링크 제공
+
+### 👨‍💼 관리자 기능
+
+#### 1. 대시보드
+- 실시간 이용자 수 모니터링
+- 일일 이용자 통계
+- 분석 이용 통계
+- 미답변 문의 현황
+- 화장품 데이터 현황
+
+#### 2. 데이터 관리
+- 사용자 관리
+- 화장품 등록 (수동/자동)
+- 화장품 데이터 관리
+- 평가 관리
+- 성분 데이터 관리
+- 홍보 관리
+- 문의 관리
+- AI 모델 관리
+
+## 🗃️ ERD (Entity Relationship Diagram)
+
+```mermaid
+erDiagram
+    MEMBER ||--o{ ANALYSIS : has
+    MEMBER ||--o{ PREFERRED_INGREDIENT : has
+    MEMBER ||--o{ QNA : writes
+    MEMBER {
+        Long id PK
+        String name
+        String nickname
+        String login_id
+        String password
+        Date birth
+        Gender gender
+        String email
+        SkinType skin_type
+        String allergy
+    }
+
+    ANALYSIS ||--|{ ANALYSIS_COSMETIC_REGISTRATION : has
+    ANALYSIS {
+        Long id PK
+        Long member_id FK
+        String image_path
+        Date created_date
+        Integer evaluation
+    }
+
+    COSMETIC ||--|{ ANALYSIS_COSMETIC_REGISTRATION : registered_in
+    COSMETIC ||--|{ COSMETIC_INGREDIENT : contains
+    COSMETIC {
+        Long id PK
+        String name
+        String brand
+        String image_path
+        Integer price
+        Date created_date
+    }
+
+    INGREDIENT ||--|{ COSMETIC_INGREDIENT : used_in
+    INGREDIENT ||--|{ PREFERRED_INGREDIENT : preferred_by
+    INGREDIENT {
+        Long id PK
+        String name
+        Integer grade
+        String description
+    }
+
+    ANALYSIS_COSMETIC_REGISTRATION {
+        Long id PK
+        Long analysis_id FK
+        Long cosmetic_id FK
+        Integer score
+    }
+
+    COSMETIC_INGREDIENT {
+        Long cosmetic_id FK
+        Long ingredient_id FK
+    }
+
+    PREFERRED_INGREDIENT {
+        Long member_id FK
+        Long ingredient_id FK
+    }
+
+    QNA {
+        Long id PK
+        Long member_id FK
+        String title
+        String content
+        String answer
+        Date created_date
+        Boolean is_answered
+    }
+```
+
+## 🛠️ 기술 스택
+
+### Backend
+- Java 17
+- Spring Boot
+- Spring Data JPA
+- MySQL
+- Python (AI/ML)
+
+### Frontend
+- React Native
+- TypeScript
+- Styled Components
+
+### AI/ML
+- OpenAI GPT
+- TensorFlow
+- scikit-learn
+
+### DevOps
+- Docker
+- AWS
+- GitHub Actions
+
+## 📦 시스템 아키텍처
+
+```mermaid
+graph TB
+    Client[Client] --> API[API Gateway]
+    API --> Auth[Auth Service]
+    API --> Analysis[Analysis Service]
+    API --> Recommendation[Recommendation Service]
+    
+    Analysis --> DB[(Database)]
+    Analysis --> AI[AI Service]
+    Recommendation --> DB
+    Recommendation --> AI
+    
+    AI --> OpenAI[OpenAI API]
+    AI --> ML[ML Models]
+```
+
+## 🚀 설치 및 실행
+
+```bash
+# 저장소 클론
+git clone https://github.com/your-username/IntellyCosm.git
+
+# 디렉토리 이동
+cd IntellyCosm
+
+# 의존성 설치
+./gradlew build
+
+# 애플리케이션 실행
+./gradlew bootRun
+```
+
+## 🤝 기여하기
+
+1. 프로젝트 포크
+2. 새 브랜치를 생성합니다
+3. 변경사항을 커밋합니다
+4. 브랜치에 푸시합니다
+5. Pull Request 생성
+
+## 📝 라이센스
+
+이 프로젝트는 MIT 라이선스를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
