@@ -1,0 +1,52 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.2.4'
+	id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'gachon'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.session:spring-session-core'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'mysql:mysql-connector-java:8.0.28'
+	implementation "org.springframework.boot:spring-boot-starter-websocket:2.4.5"
+	
+	// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.session:spring-session-data-redis'
+	implementation 'org.apache.commons:commons-pool2:2.11.1'
+	implementation 'io.lettuce:lettuce-core:6.2.1.RELEASE'
+	
+	// 캐시 모니터링
+	implementation 'io.micrometer:micrometer-core'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+	
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.mockito'
+	}
+	
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	implementation "org.springframework:spring-messaging"
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

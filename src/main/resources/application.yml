@@ -1,0 +1,132 @@
+#spring:
+#  application:
+#    name: gachon-project
+#  datasource:
+#    url: jdbc:mysql://database-1.c3fd3ornjiyz.us-east-1.rds.amazonaws.com:3306/gachon
+#    username: admin
+#    password: rkcjseogkrry
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+
+spring:
+  application:
+    name: gachon-project
+  datasource:
+    url: jdbc:mysql://localhost:3306/gachon_test
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+    initialization-mode: always
+    data: classpath:data.sql
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        default_batch_fetch_size: 1000
+        jdbc:
+          batch_size: 1000
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+        generate_statistics: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        id:
+          new_generator_mappings: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+      platform: mysql
+  servlet:
+    multipart:
+      max-file-size: 100MB  # 단일 파일의 최대 크기
+      max-request-size: 100MB  # 요청에 포함된 파일들의 최대 크기
+
+
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+
+
+  web:
+    resources:
+      static-locations:
+        - classpath:/META-INF/resources/
+        - classpath:/resources/
+        - classpath:/static/
+        - classpath:/public/
+        - file:/home/t24106/v1.0src/BackEnd/Service/src/main/resources/static/build/
+
+
+
+  redis:
+    host: localhost
+    port: 6379
+    pool:
+      max-total: 50
+      max-idle: 20
+      min-idle: 5
+    timeout: 3000
+    lettuce:
+      pool:
+        max-active: 50
+        max-idle: 20
+        min-idle: 5
+        max-wait: 3000ms
+  cache:
+    type: redis
+    redis:
+      time-to-live: 24h
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: intelly:
+
+
+file:
+  upload-dir: /home/t24106/v1.0src/BackEnd/Service/src/main/resources/static/user/image
+  upload-dir2: /home/t24106/v1.0src/BackEnd/Service/src/main/resources/static/admin/image
+
+
+
+
+server:
+  port: 60006
+
+bulk:
+  processing:
+    batch-size: 1000
+    thread-pool-size: 4
+    max-memory-usage: 80
+    timeout-seconds: 3600
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    tags:
+      application: IntellyCosm
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+      sla:
+        "[http.server.requests]": 1ms,5ms,10ms,50ms,100ms,200ms,500ms,1s
+      percentiles:
+        "[http.server.requests]": 0.5,0.75,0.95,0.99
