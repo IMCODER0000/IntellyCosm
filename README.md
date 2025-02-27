@@ -937,3 +937,215 @@ cd IntellyCosm
 이 프로젝트는 MIT 라이선스를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
 ```
+# <div align="center">
+  <img src="docs/images/logo.png" alt="IntellyCosm" width="400"/>
+  <h1>IntellyCosm Server</h1>
+  <p>AI-Powered Cosmetic Analysis & Recommendation Platform</p>
+</div>
+
+![banner](docs/images/header.jpg)
+
+## 목차
+- [💫 IntellyCosm 소개](#-intellycosm-소개)
+- [🛠️ 기술 스택](#-기술-스택)
+  - [Backend Development](#backend-development)
+  - [AI/ML Technologies](#aiml-technologies)
+  - [Infrastructure & DevOps](#infrastructure--devops)
+- [🔎 시스템 아키텍처](#-시스템-아키텍처)
+  - [1️⃣ Clean Architecture](#1️⃣-clean-architecture)
+  - [2️⃣ AI/ML Pipeline](#2️⃣-aiml-pipeline)
+  - [3️⃣ Cloud Infrastructure](#3️⃣-cloud-infrastructure)
+  - [4️⃣ Multi-Module Structure](#4️⃣-multi-module-structure)
+- [💡 주요 기능](#-주요-기능)
+- [📚 기술 블로그](#-기술-블로그)
+- [🤝 기여하기](#-기여하기)
+- [📝 라이센스](#-라이센스)
+
+## 💫 IntellyCosm 소개
+
+IntellyCosm은 AI 기술을 활용한 화장품 분석 및 추천 플랫폼입니다:
+
+- 🔍 **성분 분석**: OCR과 GPT를 활용한 화장품 성분 분석
+- 💝 **맞춤 추천**: 개인화된 AI 기반 화장품 추천
+- 📊 **데이터 기반**: 빅데이터 분석을 통한 트렌드 파악
+- 🤝 **커뮤니티**: 사용자 리뷰 및 평가 시스템
+
+## 🛠️ 기술 스택
+
+### Backend Development
+
+<img src="https://img.shields.io/badge/Framework-555555?style=for-the-badge">![SpringBoot](https://img.shields.io/badge/springboot-%236DB33F.svg?style=for-the-badge&logo=springboot&logoColor=white)![spring_data_JPA](https://img.shields.io/badge/spring_data_JPA-%236DB33F?style=for-the-badge&logo=databricks&logoColor=white)![spring_security](https://img.shields.io/badge/spring_security-%236DB33F.svg?style=for-the-badge&logo=springsecurity&logoColor=white)
+
+<img src="https://img.shields.io/badge/build-555555?style=for-the-badge">![Gradle](https://img.shields.io/badge/Gradle-02303A.svg?style=for-the-badge&logo=Gradle&logoColor=white)
+
+<img src="https://img.shields.io/badge/Test-555555?style=for-the-badge">![junit5](https://img.shields.io/badge/junit5-25A162?style=for-the-badge&logo=junit5&logoColor=white)![mockito](https://img.shields.io/badge/mockito-DA383E?style=for-the-badge&logo=mockito&logoColor=white)
+
+<img src="https://img.shields.io/badge/Database-555555?style=for-the-badge">![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+
+### AI/ML Technologies
+
+<img src="https://img.shields.io/badge/AI_Framework-555555?style=for-the-badge">![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
+
+<img src="https://img.shields.io/badge/LLM-555555?style=for-the-badge">![OpenAI](https://img.shields.io/badge/OpenAI-412991.svg?style=for-the-badge&logo=OpenAI&logoColor=white)
+
+<img src="https://img.shields.io/badge/ML_Ops-555555?style=for-the-badge">![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
+
+### Infrastructure & DevOps
+
+<img src="https://img.shields.io/badge/AWS-555555?style=for-the-badge">![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
+
+<img src="https://img.shields.io/badge/Container-555555?style=for-the-badge">![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+
+<img src="https://img.shields.io/badge/CI/CD-555555?style=for-the-badge">![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
+
+## 🔎 시스템 아키텍처
+
+### 1️⃣ Clean Architecture
+
+![Clean Architecture](docs/images/clean_architecture.png)
+
+IntellyCosm은 Clean Architecture 원칙을 따릅니다:
+
+#### Layer 구조
+```mermaid
+graph TB
+    A[API Layer] --> B[Service Layer]
+    B --> C[Domain Layer]
+    C --> D[Infrastructure Layer]
+    
+    style A fill:#c5e1a5,stroke:#333,stroke-width:2px
+    style B fill:#ffcc80,stroke:#333,stroke-width:2px
+    style C fill:#81d4fa,stroke:#333,stroke-width:2px
+    style D fill:#ef9a9a,stroke:#333,stroke-width:2px
+```
+
+- 📱 **API Layer**: 외부 요청 처리
+- 💼 **Service Layer**: 비즈니스 로직
+- 🏛️ **Domain Layer**: 핵심 도메인 모델
+- 🔧 **Infrastructure Layer**: 외부 시스템 연동
+
+### 2️⃣ AI/ML Pipeline
+
+![AI Pipeline](docs/images/ai_pipeline.png)
+
+#### 데이터 처리 흐름
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant OCR
+    participant GPT
+    participant ML
+    
+    Client->>API: 이미지 업로드
+    API->>OCR: 텍스트 추출
+    OCR->>GPT: 성분 분석
+    GPT->>ML: 추천 엔진
+    ML->>Client: 결과 반환
+```
+
+### 3️⃣ Cloud Infrastructure
+
+![Infrastructure](docs/images/infrastructure.png)
+
+AWS 기반의 확장 가능한 인프라:
+
+#### 시스템 구성
+```mermaid
+graph TB
+    subgraph CDN
+        CF[CloudFront]
+    end
+    
+    subgraph LoadBalancer
+        ALB[Application Load Balancer]
+    end
+    
+    subgraph Compute
+        EC2_1[EC2 Instance 1]
+        EC2_2[EC2 Instance 2]
+    end
+    
+    subgraph Storage
+        RDS[(RDS)]
+        S3[S3]
+        Redis[(ElastiCache)]
+    end
+    
+    CF --> ALB
+    ALB --> EC2_1
+    ALB --> EC2_2
+    EC2_1 --> RDS
+    EC2_1 --> S3
+    EC2_1 --> Redis
+    EC2_2 --> RDS
+    EC2_2 --> S3
+    EC2_2 --> Redis
+```
+
+### 4️⃣ Multi-Module Structure
+
+![Multi-Module](docs/images/multi_module.png)
+
+#### 모듈 구성
+```mermaid
+graph TB
+    A[api-module] --> B[service-module]
+    B --> C[domain-module]
+    B --> D[infrastructure-module]
+    A --> E[common-module]
+    B --> E
+    C --> E
+    D --> E
+```
+
+## 💡 주요 기능
+
+### 1. 화장품 성분 분석
+- OCR을 통한 성분표 추출
+- GPT 기반 성분 분석
+- 안전성 평가
+
+### 2. 맞춤형 추천
+- 협업 필터링
+- 콘텐츠 기반 필터링
+- 하이브리드 추천
+
+### 3. 사용자 관리
+- JWT 기반 인증
+- 소셜 로그인
+- 프로필 관리
+
+### 4. 데이터 분석
+- 트렌드 분석
+- 사용자 행동 분석
+- 성능 모니터링
+
+## 📚 기술 블로그
+
+### AI/ML 시스템
+- [GPT-4 기반 성분 분석 시스템 구축기](https://tech.intellycosm.com/gpt4-analysis)
+- [이미지 처리 파이프라인 최적화](https://tech.intellycosm.com/image-pipeline)
+- [하이브리드 추천 시스템 개발기](https://tech.intellycosm.com/recommender)
+
+### 인프라 구축
+- [AWS 인프라 설계와 구현](https://tech.intellycosm.com/aws-infra)
+- [Redis 캐싱 전략](https://tech.intellycosm.com/redis-cache)
+- [CDN 최적화](https://tech.intellycosm.com/cdn-opt)
+
+### 아키텍처 개선
+- [Clean Architecture 적용기](https://tech.intellycosm.com/clean-arch)
+- [모듈형 구조로의 전환](https://tech.intellycosm.com/modular)
+- [테스트 자동화](https://tech.intellycosm.com/testing)
+
+## 🤝 기여하기
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 라이센스
+
+이 프로젝트는 MIT 라이선스를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
