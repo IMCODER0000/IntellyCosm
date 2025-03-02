@@ -99,7 +99,6 @@ public class ComparisonAnalysisService {
 
         // 비교 분석 생성
         ComparisonAnalysis comparisonAnalysis = new ComparisonAnalysis();
-        comparisonAnalysis.setDescription(comparisonDescription);
         comparisonAnalysis.setDate(currentDate);
         comparisonAnalysis.setMember(member);
         comparisonAnalysis.setModel_id(latestModelId);

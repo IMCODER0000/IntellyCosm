@@ -1,14 +1,19 @@
 package gachonproject.mobile.service;
 
+import gachonproject.mobile.api.dto.AnalysisDTO;
+import gachonproject.mobile.api.dto.AnalysisRequestDTO;
+import gachonproject.mobile.api.dto.IngredientDTO;
 import gachonproject.mobile.api.dto.ScoreDataDTO;
 import gachonproject.mobile.domain.analysis.Analysis;
 import gachonproject.mobile.domain.analysis.AnalysisCosmeticRegistration;
 import gachonproject.mobile.domain.analysis.AnalysisIngredient;
+import gachonproject.mobile.domain.em.AnalysisStatus;
 import gachonproject.mobile.domain.ingredient.Ingredient;
 import gachonproject.mobile.domain.ingredient.IngredientFeature;
 import gachonproject.mobile.domain.ingredient.SkinTypeFeature;
 import gachonproject.mobile.domain.member.Member;
 import gachonproject.mobile.repository.AnalysisRepository;
+import gachonproject.mobile.service.AiService.AnalysisResult;
 import lombok.RequiredArgsConstructor;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
@@ -45,6 +50,8 @@ public class AnalysisService {
     private final AnalysisRepository analysisRepository;
     @Autowired
     private final AiService ai;
+    @Autowired
+    private final KafkaProducerService kafkaProducerService;
 
     // 분석 전체 조회
     public List<Analysis> findAll(){
@@ -229,19 +236,24 @@ public class AnalysisService {
 
     /**
      * OCR을 통해 화장품 이름과 성분을 분석합니다.
+     * @param filePath 이미지 파일 경로
+     * @return 분석 결과 (화장품 이름과 성분 목록)
      */
-    public AnalysisResult processOcrAnalysis(Path filePath) {
-        List<String> result = ai.analyzeImage2(filePath);
-
-        if (result == null || result.isEmpty()) {
-            throw new RuntimeException("OCR 분석 결과가 없습니다.");
+    private AiService.AnalysisResult processOcrAnalysis(Path filePath) {
+        try {
+            // 이미지 분석 (OCR)
+            List<String> ingredients = ai.analyzeImage3(filePath);
+            
+            // 화장품 이름은 파일 이름에서 추출 (실제 구현에서는 OCR 결과에서 추출)
+            String cosmeticName = filePath.getFileName().toString();
+            if (cosmeticName.contains(".")) {
+                cosmeticName = cosmeticName.substring(0, cosmeticName.lastIndexOf("."));
+            }
+            
+            return new AiService.AnalysisResult(cosmeticName, ingredients);
+        } catch (Exception e) {
+            throw new RuntimeException("OCR 분석 중 오류 발생", e);
         }
-
-        String cosmeticName = result.get(0);
-        result.remove(0);
-        List<String> cosmeticIngredients = result;
-
-        return new AnalysisResult(cosmeticName, cosmeticIngredients);
     }
 
     /**
@@ -289,7 +301,7 @@ public class AnalysisService {
         Path filePath = Paths.get(imagePath);
 
         // OCR 분석 수행
-        AnalysisResult ocrResult = processOcrAnalysis(filePath);
+        AiService.AnalysisResult ocrResult = processOcrAnalysis(filePath);
             
         // 성분 조회
         List<Ingredient> ingredients = findByNames(ocrResult.getIngredients());
@@ -364,5 +376,74 @@ public class AnalysisService {
             scoring.getDangerCount(),
             ingredientDTOs
         );
+    }
+
+    // 분석 요청을 Kafka로 전송
+    public void requestAnalysis(Long memberId, String imageUrl, String requestType) {
+        // 분석 엔티티 생성
+        Analysis analysis = new Analysis();
+        analysis.setStatus(AnalysisStatus.PENDING);
+        createAnalysis(analysis);
+
+        // Kafka로 분석 요청 전송
+        AnalysisRequestDTO request = new AnalysisRequestDTO(memberId, imageUrl, requestType, analysis.getId());
+        kafkaProducerService.sendAnalysisRequest(request);
+    }
+    
+    /**
+     * 동기 방식으로 분석을 수행합니다 (Kafka를 사용하지 않음)
+     * 성능 비교 테스트를 위한 메서드입니다.
+     */
+    public Analysis processSynchronously(Long memberId, String imageUrl, String requestType) {
+        long startTime = System.currentTimeMillis();
+        
+        // 분석 엔티티 생성
+        Analysis analysis = new Analysis();
+        analysis.setStatus(AnalysisStatus.PROCESSING);
+        createAnalysis(analysis);
+        
+        try {
+            // 멤버 조회
+            Member member = memberService.findById(memberId);
+            if (member == null) {
+                throw new RuntimeException("멤버를 찾을 수 없습니다: " + memberId);
+            }
+            
+            // 분석 유형에 따른 처리
+            if ("SKIN_ANALYSIS".equals(requestType)) {
+                // 피부 분석 로직 수행
+                List<Ingredient> ingredients = ai.performSkinAnalysis(imageUrl);
+                analysis.setDescription("피부 분석 완료");
+                createAnalysisIngredient(ingredients, analysis);
+            } else if ("COSMETIC_ANALYSIS".equals(requestType)) {
+                // 화장품 분석 로직 수행
+                Path filePath = Paths.get(imageUrl);
+                AiService.AnalysisResult ocrResult = processOcrAnalysis(filePath);
+                
+                // 성분 분석
+                List<Ingredient> ingredients = findByNames(ocrResult.getIngredients());
+                analysis.setDescription("화장품 분석 완료: " + ocrResult.getCosmeticName());
+                createAnalysisIngredient(ingredients, analysis);
+            } else {
+                throw new IllegalArgumentException("지원하지 않는 분석 유형: " + requestType);
+            }
+            
+            // 분석 완료 상태로 업데이트
+            analysis.setStatus(AnalysisStatus.COMPLETED);
+            analysis.setMember(member);
+            analysis.setAnalysisDate(LocalDateTime.now());
+            updateAnalysis(analysis);
+            
+            long endTime = System.currentTimeMillis();
+            System.out.println("동기 처리 소요 시간: " + (endTime - startTime) + "ms");
+            
+            return analysis;
+        } catch (Exception e) {
+            // 오류 발생 시 상태 업데이트
+            analysis.setStatus(AnalysisStatus.FAILED);
+            analysis.setDescription("분석 중 오류 발생: " + e.getMessage());
+            updateAnalysis(analysis);
+            throw new RuntimeException("분석 처리 중 오류 발생", e);
+        }
     }
 }

@@ -24,6 +24,13 @@ public class RecommendService {
     }
 
 
+    public List<RecommendEvaluation> getAllRecommendEvaluation(LocalDate day) {
+        return recommendRepository.getAllRecommendEvaluation(day);
+    }
+
+    public void saveEvaluation(RecommendEvaluation recommendEvaluation) {
+        recommendRepository.saveEvaluation(recommendEvaluation);
+    }
 
 
     @Scheduled(cron = "0 0 0 * * *") // 매일 자정에 실행

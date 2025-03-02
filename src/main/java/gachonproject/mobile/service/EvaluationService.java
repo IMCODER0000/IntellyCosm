@@ -6,7 +6,6 @@ import gachonproject.mobile.domain.analysis.AnalysisCosmeticRegistration;
 import gachonproject.mobile.domain.comparison.ComparisonAnalysisMaping;
 import gachonproject.mobile.domain.cosmetic.Cosmetic;
 import gachonproject.mobile.domain.cosmeticIngredient.CosmeticIngredient;
-import gachonproject.mobile.domain.em.Skintype;
 import gachonproject.mobile.domain.ingredient.Ingredient;
 import gachonproject.mobile.domain.ingredient.SkinTypeFeature;
 import gachonproject.mobile.domain.member.Member;
@@ -29,6 +28,22 @@ public class EvaluationService {
     private final ComparisonAnalysisService comparisonAnalysisService;
     private final AiService aiService;
 
+    public List<Integer> testRecommend(Long analysisId, Long memberId) {
+        System.out.println("파이썬 시작 전");
+        List<Integer> recommend = aiService.recommend(analysisId, memberId);
+        System.out.println("파이썬 시작 후");
+
+        if (recommend != null && !recommend.isEmpty()) {
+            for (Integer i : recommend) {
+                System.out.println(i);
+            }
+        } else {
+            System.out.println("추천 리스트가 비어 있습니다.");
+        }
+
+        return recommend;
+    }
+
     public RecommendDTO processAnalysisEvaluation(Long memberId, Long analysisId, int cosmeticScore) {
         // 화장품 등록 데이터 업데이트
         AnalysisCosmeticRegistration registration = analysisService.findAnalysisCosmeticRegistrationByAnalysisId(analysisId);
@@ -49,41 +64,7 @@ public class EvaluationService {
         // 화장품 정보 조회
         Cosmetic cosmetic = cosmeticService.findCosmeticById(cosmeticId);
         
-        // 회원 선호 성분 정보 조회
-        List<Ingredient> preferredIngredients = member.getPreferedIngredient().stream()
-                .map(PreferedIngredient::getIngredient)
-                .toList();
-
-        // 화장품 성분 분석
-        List<String> positiveSkinTypeFeatures = new ArrayList<>();
-        List<String> preferenceIngredients = new ArrayList<>();
-        
-        for (CosmeticIngredient cosmeticIngredient : cosmetic.getCosmeticIngredients()) {
-            // 피부 타입 효과 분석
-            if (cosmeticIngredient.getIngredient().getSkinTypeFeatures() != null) {
-                for (SkinTypeFeature feature : cosmeticIngredient.getIngredient().getSkinTypeFeatures()) {
-                    if (feature.getSkin_type() == member.getSkin_type() && feature.isPositivity_status()) {
-                        positiveSkinTypeFeatures.add(feature.getSkinDescription());
-                    }
-                }
-            }
-            
-            // 선호 성분 체크
-            if (preferredIngredients.contains(cosmeticIngredient.getIngredient())) {
-                preferenceIngredients.add(cosmeticIngredient.getIngredient().getName());
-            }
-        }
-
-        // DTO 생성 및 반환
-        return new RecommendDTO(
-            cosmetic.getId(),
-            score,
-            preferenceIngredients,
-            cosmetic.getName(),
-            member.getSkin_type(),
-            positiveSkinTypeFeatures,
-            cosmetic.getImage_path()
-        );
+        return createRecommendDTO(member, cosmetic, score);
     }
 
     public RecommendDTO processComparisonAnalysisEvaluation(Long memberId, Long comparisonId, 
@@ -94,34 +75,41 @@ public class EvaluationService {
         Long analysisId2 = mappings.get(1).getAnalysis().getId();
 
         // 화장품 등록 데이터 업데이트
-        AnalysisCosmeticRegistration registration1 = analysisService.findAnalysisCosmeticRegistrationByAnalysisId(analysisId1);
-        AnalysisCosmeticRegistration registration2 = analysisService.findAnalysisCosmeticRegistrationByAnalysisId(analysisId2);
-        registration1.setScore(cosmeticScore1);
-        registration2.setScore(cosmeticScore2);
-        analysisService.updateAnalysisCosmeticRegistration(registration1);
-        analysisService.updateAnalysisCosmeticRegistration(registration2);
+        updateAnalysisRegistration(analysisId1, cosmeticScore1);
+        updateAnalysisRegistration(analysisId2, cosmeticScore2);
 
         // 분석 데이터 업데이트
         Member member = memberService.findMemberById(memberId);
-        Analysis analysis1 = analysisService.findById(analysisId1);
-        Analysis analysis2 = analysisService.findById(analysisId2);
-        analysis1.setEvaluation(cosmeticScore1);
-        analysis2.setEvaluation(cosmeticScore2);
-        analysisService.updateAnalysis(analysis1);
-        analysisService.updateAnalysis(analysis2);
+        updateAnalysisEvaluation(analysisId1, cosmeticScore1);
+        updateAnalysisEvaluation(analysisId2, cosmeticScore2);
 
         // 임시로 첫 번째 화장품 정보 반환 (실제로는 AI 모델 기반 추천 로직 필요)
         Cosmetic cosmetic = cosmeticService.getCosmeticById(1L);
+        return createRecommendDTO(member, cosmetic, 85); // 임시 점수 85
+    }
+
+    private void updateAnalysisRegistration(Long analysisId, int score) {
+        AnalysisCosmeticRegistration registration = analysisService.findAnalysisCosmeticRegistrationByAnalysisId(analysisId);
+        registration.setScore(score);
+        analysisService.updateAnalysisCosmeticRegistration(registration);
+    }
+
+    private void updateAnalysisEvaluation(Long analysisId, int score) {
+        Analysis analysis = analysisService.findById(analysisId);
+        analysis.setEvaluation(score);
+        analysisService.updateAnalysis(analysis);
+    }
+
+    private RecommendDTO createRecommendDTO(Member member, Cosmetic cosmetic, int score) {
+        List<String> positiveSkinTypeFeatures = new ArrayList<>();
+        List<String> preferenceIngredients = new ArrayList<>();
         
-        // 회원 선호 성분 정보 조회
+        // 회원 선호 성분 목록 생성
         List<Ingredient> preferredIngredients = member.getPreferedIngredient().stream()
                 .map(PreferedIngredient::getIngredient)
                 .toList();
 
         // 화장품 성분 분석
-        List<String> positiveSkinTypeFeatures = new ArrayList<>();
-        List<String> preferenceIngredients = new ArrayList<>();
-        
         for (CosmeticIngredient cosmeticIngredient : cosmetic.getCosmeticIngredients()) {
             // 피부 타입 효과 분석
             if (cosmeticIngredient.getIngredient().getSkinTypeFeatures() != null) {
@@ -138,10 +126,9 @@ public class EvaluationService {
             }
         }
 
-        // DTO 생성 및 반환
         return new RecommendDTO(
             cosmetic.getId(),
-            85, // 임시 점수
+            score,
             preferenceIngredients,
             cosmetic.getName(),
             member.getSkin_type(),
