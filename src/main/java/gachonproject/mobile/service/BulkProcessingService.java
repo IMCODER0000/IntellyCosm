@@ -1,14 +1,15 @@
 package gachonproject.mobile.service;
 
-import gachonproject.mobile.domain.Ingredient;
+import gachonproject.mobile.domain.ingredient.Ingredient;
 import gachonproject.mobile.repository.IngredientRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BulkProcessingService {
 
     private final IngredientRepository ingredientRepository;
@@ -30,7 +30,18 @@ public class BulkProcessingService {
     @Value("${bulk.processing.thread-pool-size:4}")
     private int threadPoolSize;
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private ExecutorService executorService;
+    
+    @Autowired
+    public BulkProcessingService(IngredientRepository ingredientRepository, CacheManager cacheManager) {
+        this.ingredientRepository = ingredientRepository;
+        this.cacheManager = cacheManager;
+    }
+
+    @PostConstruct
+    public void init() {
+        this.executorService = Executors.newFixedThreadPool(threadPoolSize);
+    }
 
     /**
      * 배치 크기로 분할하여 벌크 업데이트 수행
@@ -94,38 +105,70 @@ public class BulkProcessingService {
      * 개별 배치 처리 로직
      */
     private void processBatch(List<Ingredient> batch) {
+        if (batch == null || batch.isEmpty()) {
+            log.warn("빈 배치가 처리되었습니다.");
+            return;
+        }
+        
+        List<Long> processedIds = new ArrayList<>();
+        
         batch.forEach(ingredient -> {
             try {
-                // 분석 로직 수행
+                // 성분 분석 수행
                 String analysisResult = analyzeIngredient(ingredient);
                 
                 // 분석 결과 저장
-                ingredientRepository.saveAnalysisResult(
-                    ingredient.getId(), 
-                    analysisResult
-                );
+                if (analysisResult != null) {
+                    ingredientRepository.saveAnalysisResult(
+                        ingredient.getId(), 
+                        analysisResult
+                    );
+                    processedIds.add(ingredient.getId());
+                }
             } catch (Exception e) {
-                log.error("Error processing ingredient {}: {}", ingredient.getId(), e.getMessage());
+                log.error("성분 처리 중 오류 발생 ID {}: {}", ingredient.getId(), e.getMessage());
             }
         });
+        
+        // 처리된 항목에 대한 캐시 갱신
+        if (!processedIds.isEmpty()) {
+            evictCacheForIngredients(processedIds);
+        }
     }
 
     /**
      * 성분 분석 로직
      */
     private String analyzeIngredient(Ingredient ingredient) {
-        // 실제 분석 로직 구현
-        return "Analysis result for " + ingredient.getId();
+        if (ingredient == null) {
+            log.warn("분석을 위한 성분이 null입니다.");
+            return null;
+        }
+        
+        try {
+            // 실제 분석 로직 구현 (현재는 예시)
+            log.info("성분 분석 중: {}", ingredient.getId());
+            return "성분 " + ingredient.getId() + "에 대한 분석 결과: " + 
+                   (ingredient.getName() != null ? ingredient.getName() : "이름 없음");
+        } catch (Exception e) {
+            log.error("성분 분석 중 오류 발생: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**
      * 캐시 삭제
      */
     private void evictCacheForIngredients(List<Long> ingredientIds) {
-        ingredientIds.forEach(id -> {
-            cacheManager.getCache("ingredient").evict(id);
-        });
-        cacheManager.getCache("ingredients").clear();
+        if (cacheManager.getCache("ingredient") != null) {
+            ingredientIds.forEach(id -> {
+                cacheManager.getCache("ingredient").evict(id);
+            });
+        }
+        
+        if (cacheManager.getCache("ingredients") != null) {
+            cacheManager.getCache("ingredients").clear();
+        }
     }
 
     /**
