@@ -19,16 +19,26 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.session:spring-session-core'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'mysql:mysql-connector-java:8.0.28'
 	implementation "org.springframework.boot:spring-boot-starter-websocket:2.4.5"
+	
+	// Kafka
+	implementation 'org.springframework.kafka:spring-kafka'
 	
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.session:spring-session-data-redis'
 	implementation 'org.apache.commons:commons-pool2:2.11.1'
 	implementation 'io.lettuce:lettuce-core:6.2.1.RELEASE'
+	
+	// 성능 테스트 및 모니터링
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+	testImplementation 'org.apache.jmeter:ApacheJMeter_core:5.6.2'
+	testImplementation 'org.apache.jmeter:ApacheJMeter_java:5.6.2'
 	
 	// 캐시 모니터링
 	implementation 'io.micrometer:micrometer-core'
