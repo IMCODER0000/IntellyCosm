@@ -156,20 +156,40 @@ public class IngredientRepository {
 
     @Modifying
     @Query(value = "UPDATE Ingredient i SET i.safety_grade = :safetyGrade WHERE i.id IN :ids")
-    int bulkUpdateSafetyGrade(@Param("ids") List<Long> ids, @Param("safetyGrade") String safetyGrade);
+    public int bulkUpdateSafetyGrade(@Param("ids") List<Long> ids, @Param("safetyGrade") String safetyGrade) {
+        return em.createQuery("UPDATE Ingredient i SET i.safety_grade = :safetyGrade WHERE i.id IN :ids")
+                .setParameter("safetyGrade", safetyGrade)
+                .setParameter("ids", ids)
+                .executeUpdate();
+    }
 
-    @Query(value = "SELECT i FROM Ingredient i WHERE i.id > :lastId ORDER BY i.id ASC LIMIT :batchSize", 
-           nativeQuery = true)
-    List<Ingredient> findIngredientsInBatch(@Param("lastId") Long lastId, @Param("batchSize") int batchSize);
+    @Query(value = "SELECT i FROM Ingredient i WHERE i.id > :lastId ORDER BY i.id ASC LIMIT :batchSize",
+            nativeQuery = true)
+    public List<Ingredient> findIngredientsInBatch(@Param("lastId") Long lastId, @Param("batchSize") int batchSize) {
+        return em.createNativeQuery("SELECT * FROM ingredient i WHERE i.id > :lastId ORDER BY i.id ASC LIMIT :batchSize", Ingredient.class)
+                .setParameter("lastId", lastId)
+                .setParameter("batchSize", batchSize)
+                .getResultList();
+    }
 
     @Query("SELECT i FROM Ingredient i WHERE i.updated_at IS NULL")
-    List<Ingredient> findIngredientsNeedingUpdate();
+    public List<Ingredient> findIngredientsNeedingUpdate() {
+        return em.createQuery("SELECT i FROM Ingredient i WHERE i.updated_at IS NULL", Ingredient.class)
+                .getResultList();
+    }
 
     @Modifying
     @Query(value = "INSERT INTO ingredient_analysis_result (ingredient_id, analysis_data) " +
-           "VALUES (:ingredientId, :analysisData) " +
-           "ON DUPLICATE KEY UPDATE analysis_data = :analysisData", 
-           nativeQuery = true)
-    void saveAnalysisResult(@Param("ingredientId") Long ingredientId, 
-                           @Param("analysisData") String analysisData);
+            "VALUES (:ingredientId, :analysisData) " +
+            "ON DUPLICATE KEY UPDATE analysis_data = :analysisData",
+            nativeQuery = true)
+    public void saveAnalysisResult(@Param("ingredientId") Long ingredientId,
+                            @Param("analysisData") String analysisData) {
+        em.createNativeQuery("INSERT INTO ingredient_analysis_result (ingredient_id, analysis_data) " +
+                "VALUES (:ingredientId, :analysisData) " +
+                "ON DUPLICATE KEY UPDATE analysis_data = :analysisData")
+                .setParameter("ingredientId", ingredientId)
+                .setParameter("analysisData", analysisData)
+                .executeUpdate();
+    }
 }
