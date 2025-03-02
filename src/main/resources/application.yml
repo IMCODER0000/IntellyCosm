@@ -92,7 +92,41 @@ spring:
       time-to-live: 24h
       cache-null-values: false
       use-key-prefix: true
-      key-prefix: intelly:
+      key-prefix: intelly
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: analysis-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: analysis-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
 
 
 file:
@@ -112,21 +146,25 @@ bulk:
     max-memory-usage: 80
     timeout-seconds: 3600
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,metrics,prometheus
-  metrics:
-    tags:
-      application: IntellyCosm
-    export:
-      prometheus:
-        enabled: true
-    distribution:
-      percentiles-histogram:
-        "[http.server.requests]": true
-      sla:
-        "[http.server.requests]": 1ms,5ms,10ms,50ms,100ms,200ms,500ms,1s
-      percentiles:
-        "[http.server.requests]": 0.5,0.75,0.95,0.99
+# 중복된 management 섹션 주석 처리
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health,metrics,prometheus
+#  metrics:
+#    tags:
+#      application: IntellyCosm
+#    export:
+#      prometheus:
+#        enabled: true
+#    distribution:
+#      percentiles-histogram:
+#        "[http.server.requests]": true
+#      sla:
+#        "[http.server.requests]": 1ms,5ms,10ms,50ms,100ms,200ms,500ms,1s
+#      percentiles:
+#        "[http.server.requests]": 0.5,0.75,0.95,0.99
+
+openai:
+  api-key: "sk-your-openai-api-key"
