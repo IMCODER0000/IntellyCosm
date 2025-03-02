@@ -1,6 +1,5 @@
 package gachonproject.mobile.domain.analysis;
 
-
 import gachonproject.mobile.domain.comparison.ComparisonAnalysis;
 import gachonproject.mobile.domain.comparison.ComparisonAnalysisMaping;
 import gachonproject.mobile.domain.em.AnalysisStatus;
@@ -11,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +44,10 @@ public class Analysis {
 
     private boolean registration_status;
 
+    @Enumerated(EnumType.STRING)
+    private AnalysisStatus status;
+
+    private LocalDate analysisDate;
 
     @OneToMany(mappedBy = "analysis")
     private List<ComparisonAnalysisMaping> comparisonAnalysisMapings;
@@ -97,9 +101,6 @@ public class Analysis {
         return count;
     }
 
-
-
-
     public int final_grade(int score) {
         int a = 0;
         if(score <= 100 && score >= 80){
@@ -123,5 +124,27 @@ public class Analysis {
         return a;
     }
 
+    public void setStatus(AnalysisStatus status) {
+        this.status = status;
+    }
 
+    public void setAnalysisDate(LocalDate analysisDate) {
+        this.analysisDate = analysisDate;
+    }
+
+    public void setAnalysisDate(LocalDateTime dateTime) {
+        this.analysisDate = dateTime.toLocalDate();
+    }
+
+    public void setMember(Member member) {
+        this.member = member;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public List<AnalysisIngredient> getAnalysisIngredient() {
+        return analysisIngredient;
+    }
 }

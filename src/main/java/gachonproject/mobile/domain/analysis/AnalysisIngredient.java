@@ -28,4 +28,12 @@ public class AnalysisIngredient {
         this.ingredient = ingredient;
         this.analysis = analysis;
     }
+
+    public void setIngredient(Ingredient ingredient) {
+        this.ingredient = ingredient;
+    }
+
+    public void setAnalysis(Analysis analysis) {
+        this.analysis = analysis;
+    }
 }

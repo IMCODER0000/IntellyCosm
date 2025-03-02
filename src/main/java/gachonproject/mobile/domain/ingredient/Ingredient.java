@@ -53,6 +53,11 @@ public class Ingredient {
     @OneToMany(mappedBy = "ingredient", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PreferedIngredient> preferedIngredient =  new ArrayList<>();
 
+    private String description;
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public List<Long> getPreferedIngredientsIds(Long memberId) {
         List<Long> preferedIngredients = new ArrayList<>();
@@ -63,8 +68,4 @@ public class Ingredient {
         }
         return preferedIngredients;
     }
-
-
-
-
 }
