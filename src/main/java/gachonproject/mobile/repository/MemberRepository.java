@@ -1,6 +1,5 @@
 package gachonproject.mobile.repository;
 
-
 import gachonproject.mobile.domain.member.Member;
 import gachonproject.mobile.domain.member.SkinConcern;
 import gachonproject.mobile.repository.dto.MemberSkinDTO;
@@ -10,7 +9,7 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
+import java.util.Optional;
 
 @Repository
 public class MemberRepository {
@@ -53,7 +52,16 @@ public class MemberRepository {
         }
     }
 
-
+    public Optional<Member> findById(Long member_id) {
+        try {
+            Member member = em.createQuery("SELECT m FROM Member m WHERE m.id = :member_id", Member.class)
+                    .setParameter("member_id", member_id)
+                    .getSingleResult();
+            return Optional.ofNullable(member);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
 
     public Member findByLogin_id(String login_id) {
         try {
@@ -103,16 +111,22 @@ public class MemberRepository {
 
 
     public boolean existsByLoginId(String loginId) {
-        try {
-            Member findMember = em.createQuery("SELECT m FROM Member m WHERE m.login_id = :loginId", Member.class)
-                    .setParameter("loginId", loginId)
-                    .getSingleResult();
-            return true;
-        } catch (NoResultException e) {
-            return false;
-        }
+        Long count = em.createQuery("SELECT COUNT(m) FROM Member m WHERE m.login_id = :loginId", Long.class)
+                .setParameter("loginId", loginId)
+                .getSingleResult();
+        return count > 0;
     }
 
+    public Optional<Member> findByLoginId(String loginId) {
+        try {
+            Member member = em.createQuery("SELECT m FROM Member m WHERE m.login_id = :loginId", Member.class)
+                    .setParameter("loginId", loginId)
+                    .getSingleResult();
+            return Optional.of(member);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
 
     public MemberSkinDTO getMemberSkinDTO(Long member_id) {
         List<String> skinConcernNames = em.createQuery(
@@ -126,11 +140,30 @@ public class MemberRepository {
                 skinConcernNames, member.getSkin_type());
     }
 
+    public String findLoginIdByNameAndEmail(String name, String email) {
+        try {
+            Member member = em.createQuery("SELECT m FROM Member m WHERE m.name = :name AND m.email = :email", Member.class)
+                    .setParameter("name", name)
+                    .setParameter("email", email)
+                    .getSingleResult();
+            return member.getLogin_id();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-
-
-
-
+    public String findPasswordByLoginIdAndNameAndEmail(String loginId, String name, String email) {
+        try {
+            Member member = em.createQuery("SELECT m FROM Member m WHERE m.login_id = :loginId AND m.name = :name AND m.email = :email", Member.class)
+                    .setParameter("loginId", loginId)
+                    .setParameter("name", name)
+                    .setParameter("email", email)
+                    .getSingleResult();
+            return member.getPassword();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
 
 }

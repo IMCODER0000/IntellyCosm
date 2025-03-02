@@ -16,7 +16,9 @@ public class RecommendRepository {
     private EntityManager em;
 
 
-
+    public void saveEvaluation(RecommendEvaluation recommendEvaluation) {
+        em.persist(recommendEvaluation);
+    }
 
     public void createRecommendEvaluation(RecommendEvaluation recommendEvaluation) {
         em.persist(recommendEvaluation);
