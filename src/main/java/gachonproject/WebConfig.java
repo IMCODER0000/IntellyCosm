@@ -1,6 +1,9 @@
 package gachonproject;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -12,6 +15,10 @@ public class WebConfig implements WebMvcConfigurer {
     private String resourcePath = "/User_analysis_image/**";
     private String realPath = "/home/t24106/v1.0src/Image/User/";
 
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {

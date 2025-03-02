@@ -1,6 +1,5 @@
 package gachonproject.web.api;
 
-
 import gachonproject.mobile.api.MemberApiController;
 import gachonproject.mobile.domain.em.Gender;
 import gachonproject.mobile.domain.em.Skintype;
@@ -22,20 +21,16 @@ import java.util.List;
 import java.util.Random;
 
 @RestController
-@RequiredArgsConstructor
 public class MemberManageApiController {
 
-
-    @Autowired
     private final MemberService memberService;
-    @Autowired
     private final MemberRepository memberRepository;
 
-
-
-
-    //사옹자 관리
-
+    @Autowired
+    public MemberManageApiController(MemberService memberService, MemberRepository memberRepository) {
+        this.memberService = memberService;
+        this.memberRepository = memberRepository;
+    }
 
     //사용자 데이터 전달
     @GetMapping("/api/admin/member/info")
@@ -60,12 +55,9 @@ public class MemberManageApiController {
         return new ResponseEntity<>(Members, HttpStatus.OK);
     }
 
-
     // 개인정보수정
     @PutMapping("/api/admin/memeber/udate/{member_login_id}")
     public ResponseEntity updateProfile(@PathVariable("member_login_id") String member_login_id, @RequestBody @Valid AdminMemberDTO memberRequest) {
-
-
 
         Member exMember = memberService.findMemberByLogin_id(member_login_id);
         if (exMember == null) {
@@ -114,8 +106,8 @@ public class MemberManageApiController {
                 skinConcern.setMember(exMember);
                 skinConcernList.add(skinConcern);
             }
-            exMember.setSkin_concern(skinConcernList);
             memberService.deleteSkinConcern(member_login_id);
+            exMember.setSkin_concern(skinConcernList);
             boolean result = memberService.signup2(skinConcernList);
             if (result) {
                 return new ResponseEntity(HttpStatus.OK);
@@ -128,9 +120,6 @@ public class MemberManageApiController {
             exMember.setAllergy(memberRequest.getAllergy());
         }
 
-
-
-
         boolean result2 = memberService.updateProfile(exMember);
         if (result2) {
             return new ResponseEntity(HttpStatus.OK);
@@ -139,53 +128,13 @@ public class MemberManageApiController {
         }
     }
 
-    //사용자 데이터 수정
-//    @PutMapping("/api/admin/memeber/udate")
-//    public ResponseEntity updateMember(@RequestBody Member member) {
-//
-//
-//        List<SkinConcern> skinConcern = member.getSkin_concern();
-//        for (SkinConcern concern : skinConcern) {
-//            int index = 0;
-//            if(concern.getId()==null){
-//                if(concern.getMember() == null){
-//                    concern.setMember(member);
-//                    memberService.createSkinConcern(concern);
-//                }
-//                else{
-//                    concern.setMember(member);
-//                    memberService.updateSkinConcern(concern);
-//                }
-//
-//
-//            }
-//            else{
-//                concern.setMember(member);
-//                memberService.updateSkinConcern(concern);
-//            }
-//
-//
-//
-//
-//
-//        }
-//
-//        System.out.println("냐옹");
-//        boolean result = memberService.updateProfile(member);
-//
-//        if (result) {
-//            return new ResponseEntity<>(HttpStatus.OK);
-//        }
-//        else{
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
-//
-//
-//    }
-
     //사용자 데이터 삭제
     @DeleteMapping("/api/admin/member/delete/{member_login_id}")
-    public ResponseEntity deleteMember(@PathVariable("member_login_id") String member_login_id){
+    public ResponseEntity deleteMember(@PathVariable("member_login_id") Long member_login_id){
+        Member member = memberRepository.findById(member_login_id).orElse(null);
+        if(member == null){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
         boolean result = memberService.withdraw(member_login_id);
 
         if (result) {
@@ -195,7 +144,4 @@ public class MemberManageApiController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
-
-
-
 }
